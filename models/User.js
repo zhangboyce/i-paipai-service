@@ -5,6 +5,11 @@ const UserSchema = new mongoose.Schema({
     unionId: String,
     avatarUrl: String,
     nickName: String,
+    gender: Number,
+    language: String,
+    city: String,
+    province: String,
+    country: String,
     createdDate: Date,
     lastLoginDate: Date
 });

@@ -53,11 +53,11 @@ router.get('/api/photo/count', function *() {
 
 router.get('/api/photo/list', function *() {
     let query = yield generateQuery(this);
-    let pageSize = this.query.pageSize || 9;
-    let pageNum = this.query.pageNum || 1;
+    let pageSize = parseInt(this.query.pageSize || 9);
+    let pageNum = parseInt(this.query.pageNum || 1);
     let offset = pageSize * (pageNum - 1);
 
-    let photos = yield Photo.find(query, { openId: -1 }).skip(offset).limit(pageSize);
+    let photos = yield Photo.find(query, { openId: 0 }).skip(offset).limit(pageSize);
     this.body = { photos: photos };
 });
 

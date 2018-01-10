@@ -5,8 +5,8 @@ const Utils = require('../utils/Utils');
 const REDIS_SESSION_PREFIX = Utils.REDIS_SESSION_PREFIX;
 
 module.exports = function (server) {
-    const user = require('./user');
-    server.use(user.routes()).use(user.allowedMethods());
+    const login = require('./login');
+    server.use(login.routes()).use(login.allowedMethods());
 
     server.use(function *(next) {
         try {
@@ -29,6 +29,8 @@ module.exports = function (server) {
         }
     });
 
-    const service = require('./service');
-    server.use(service.routes()).use(service.allowedMethods());
+    const photo = require('./photo');
+    const user = require('./user');
+    server.use(user.routes()).use(user.allowedMethods());
+    server.use(photo.routes()).use(photo.allowedMethods());
 };
