@@ -2,10 +2,17 @@
 const router = require('koa-router')();
 const fs = require('fs');
 const moment = require('moment');
+const config = require('config');
 const QiniuUploader = require('../utils/QiniuUploader');
+const Utils = require('../utils/Utils');
 const KoaUploadMiddleware = require('./KoaUploadMiddleware');
 const User = require('../models/User');
 const Photo = require('../models/Photo');
+
+Array.prototype.__push__ = function(val) {
+    this.push(val);
+    return this;
+};
 
 router.post('/api/photo/upload', KoaUploadMiddleware, function *() {
     let data = this.data || {};
@@ -58,7 +65,43 @@ router.get('/api/photo/list', function *() {
     let offset = pageSize * (pageNum - 1);
 
     let photos = yield Photo.find(query, { openId: 0 }).skip(offset).limit(pageSize);
-    this.body = { photos: photos };
+    let results = [];
+    photos.forEach(photo => {
+        photo = photo.toObject();
+        photo.url = config.qiniu.outLink + photo.key;
+        results.push(photo);
+    });
+    this.body = { photos: results };
+});
+
+router.get('/api/photo/categories', function *() {
+    let openId = this.openId;
+    let photos = yield Photo.find({ openId }, { key: 1, location: 1, tags: 1 });
+
+    let mapByLocation = { };
+    let mapByTag = {};
+
+    photos.forEach(photo => {
+        let location = photo.location;
+        let tags = photo.tags || [];
+
+        let url = config.qiniu.outLink + photo.key;
+
+        mapByLocation[location] = ( mapByLocation[location] || []).__push__(url);
+        if (!tags || tags.length == 0) (mapByTag['未分类'] = (( mapByTag['未分类'] || []).__push__(url)));
+        else tags.forEach(tag => tag && tag.trim() && (mapByTag[tag] = (( mapByTag[tag] || []).__push__(url))));
+    });
+
+    let listByLocation = [];
+    let listByTag = [];
+    for (let k in mapByLocation) {
+        listByLocation.push({ 'location': k, data: mapByLocation[k] })
+    }
+    for (let k in mapByTag) {
+        listByTag.push({ 'tag': k, data: mapByTag[k] })
+    }
+
+    this.body = { listByLocation, listByTag };
 });
 
 

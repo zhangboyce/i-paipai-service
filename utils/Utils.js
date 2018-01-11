@@ -17,7 +17,19 @@ function md5ByString(str) {
     return md5.digest('hex');
 }
 
-module.exports = { random, md5ByString, REDIS_SESSION_PREFIX };
+function groupBy(arr, key) {
+    let result = arr.reduce((rv, x) => { (rv[x[key]] = rv[x[key]] || []).push(x); return rv; }, {});
+    let results = [];
+    for (let k in result) {
+        results.push({
+            [key]: k,
+            data: result[k]
+        })
+    }
+    return results;
+}
+
+module.exports = { random, md5ByString, REDIS_SESSION_PREFIX, groupBy };
 
 const SALT = 'CCeGROUp-BOOM';
 console.log(md5ByString('123456' + SALT));
