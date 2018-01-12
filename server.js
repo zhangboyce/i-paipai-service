@@ -11,7 +11,6 @@ server.use(function *(next) {
     try {
         yield next;
     }catch(e) {
-        console.log(this.path, this.query, e, e.stack);
         this.body = { 'status': 'error', msg: 'system inner error.' };
     }
 });

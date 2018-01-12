@@ -74,6 +74,22 @@ router.get('/api/photo/list', function *() {
     this.body = { photos: results };
 });
 
+router.get('/api/photo/locations', function *() {
+    let openId = this.openId;
+    let photos = yield Photo.find({ openId }, { key: 1, location: 1, tags: 1 });
+
+    let result = photos.reduce((rv, x) => { (rv[x['location']] = rv[x['location']] || []).__push__(config.qiniu.outLink + x.key); return rv; }, {});
+    let results = [];
+    for (let k in result) {
+        results.push({
+            name: k,
+            urls: result[k]
+        })
+    }
+
+    this.body = { locations: results };
+});
+
 router.get('/api/photo/categories', function *() {
     let openId = this.openId;
     let photos = yield Photo.find({ openId }, { key: 1, location: 1, tags: 1 });
@@ -86,7 +102,6 @@ router.get('/api/photo/categories', function *() {
         let tags = photo.tags || [];
 
         let url = config.qiniu.outLink + photo.key;
-
         mapByLocation[location] = ( mapByLocation[location] || []).__push__(url);
         if (!tags || tags.length == 0) (mapByTag['未分类'] = (( mapByTag['未分类'] || []).__push__(url)));
         else tags.forEach(tag => tag && tag.trim() && (mapByTag[tag] = (( mapByTag[tag] || []).__push__(url))));
