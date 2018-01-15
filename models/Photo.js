@@ -4,6 +4,7 @@ const PhotoSchema = new mongoose.Schema({
     key: String,
     source: String,
     location: String,
+    address: String,
     tags: Array,
     size: Number,
     uploadedDate: Date

@@ -1,4 +1,5 @@
 'use strict';
+const _ = require('lodash');
 const router = require('koa-router')();
 const fs = require('fs');
 const moment = require('moment');
@@ -43,7 +44,8 @@ router.post('/api/photo/upload', KoaUploadMiddleware, function *() {
         key: respKey,
         size,
         location: data.location,
-        tags: (data.tags || '').split(','),
+        address: data.address,
+        tags: (data.tags || '').split(',').filter(it => it),
         source: 'qiniu',
         uploadedDate: moment() });
 
@@ -64,7 +66,7 @@ router.get('/api/photo/list', function *() {
     let pageNum = parseInt(this.query.pageNum || 1);
     let offset = pageSize * (pageNum - 1);
 
-    let photos = yield Photo.find(query, { openId: 0 }).skip(offset).limit(pageSize);
+    let photos = yield Photo.find(query, { openId: 0 }).skip(offset).limit(pageSize).sort({ uploadedDate: -1 });
     let results = [];
     photos.forEach(photo => {
         photo = photo.toObject();
@@ -86,8 +88,17 @@ router.get('/api/photo/locations', function *() {
             urls: result[k]
         })
     }
-
     this.body = { locations: results };
+});
+
+router.get('/api/photo/tags', function *() {
+    let openId = this.openId;
+    let photos = yield Photo.find({ openId }, { tags: 1 });
+    let tags =_.uniq(photos.reduce((tags, val) => {
+        return tags.concat(val.tags || []);
+    }, [])).filter(it => it);
+
+    this.body = { tags: tags };
 });
 
 router.get('/api/photo/categories', function *() {
@@ -137,6 +148,7 @@ function *generateQuery(ctx) {
     }
 
     if (tag) query['tags'] = tag;
+    if (tag == '未分类') query['tags'] = '';
     if (location) query['location'] = location;
 
     return query;
