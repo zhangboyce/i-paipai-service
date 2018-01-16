@@ -130,6 +130,13 @@ router.get('/api/photo/categories', function *() {
     this.body = { listByLocation, listByTag };
 });
 
+router.get('/api/photo/search/suggest', function *() {
+    let openId = this.openId;
+    let keyword = this.query.keyword;
+    
+    this.body = { suggests: [] }
+});
+
 
 function *generateQuery(ctx) {
     let openId = ctx.openId;
@@ -137,6 +144,7 @@ function *generateQuery(ctx) {
     let endDate = ctx.query.endDate;
     let tag = ctx.query.tag;
     let location = ctx.query.location;
+    let keyword = ctx.query.keyword;
 
     let query = { openId };
     if (startDate) {
@@ -147,9 +155,13 @@ function *generateQuery(ctx) {
         query['uploadedDate'] = uploadedDate;
     }
 
-    if (tag) query['tags'] = tag;
-    if (tag == '未分类') query['tags'] = '';
-    if (location) query['location'] = location;
+    if (keyword) {
+        query['$or'] = [{ tags: keyword }, { location: keyword }]
+    } else {
+        if (tag) query['tags'] = tag;
+        if (tag == '未分类') query['tags'] = '';
+        if (location) query['location'] = location;
+    }
 
     return query;
 }

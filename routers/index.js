@@ -13,7 +13,7 @@ module.exports = function (server) {
             let headers = this.headers;
             let sessionId = headers.sessionid;
             if (!sessionId) {
-                this.body = { errmsg: '未登录用户不能执行此次访问' };
+                this.body = { errmsg: '未登录用户不能执行此次访问', errcode: 10000 };
                 return;
             }
             let openId = yield client.getAsync(REDIS_SESSION_PREFIX + sessionId);
@@ -22,7 +22,7 @@ module.exports = function (server) {
                 this.openId = openId;
                 yield next;
             } else {
-                this.body = { errmsg: '用户登录状态过期,请重新登录' };
+                this.body = { errmsg: '用户登录状态过期,请重新登录', errcode: 10000  };
             }
         }catch(e) {
             console.log(e);
